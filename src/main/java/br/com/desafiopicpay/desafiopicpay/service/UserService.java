@@ -1,5 +1,7 @@
 package br.com.desafiopicpay.desafiopicpay.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,5 +20,9 @@ public class UserService {
 
     public User findUserById(Long id){
         return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found!"));
+    }
+
+    public List<User> findAllUsers(){
+        return userRepository.findAll();
     }
 }
