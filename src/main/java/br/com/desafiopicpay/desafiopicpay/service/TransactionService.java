@@ -2,6 +2,7 @@ package br.com.desafiopicpay.desafiopicpay.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class TransactionService {
     private NotificationService notificationService;
 
     @Transactional
-    public void createTransaction(TransactionDTO transactionDTO){
+    public Transaction createTransaction(TransactionDTO transactionDTO){
         // buscar usuarios
         User payee = this.userService.findUserById(transactionDTO.idPayee());
         User payer = this.userService.findUserById(transactionDTO.idPayer());
@@ -60,6 +61,8 @@ public class TransactionService {
         this.notificationService.sendNotification(payee, "Transaction completed");
         this.notificationService.sendNotification(payer, "Transaction completed");
 
+        return transaction;
+
     }
 
     public void validateTransaction(User payee, BigDecimal amount){
@@ -70,5 +73,9 @@ public class TransactionService {
         if (payee.getBalance().compareTo(amount) == 0){
             throw new RuntimeException("User does not have sufficient balance to complete the transaction");
         }
+    }
+
+    public List<Transaction> findAllTransactions(){
+        return transactionRepository.findAll();
     }
 }
