@@ -25,6 +25,9 @@ public class TransactionService {
     @Autowired
     private AuthorizerService authorizerService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @Transactional
     public void createTransaction(TransactionDTO transactionDTO){
         // buscar usuarios
@@ -48,11 +51,15 @@ public class TransactionService {
         transaction.setPayer(payer);
         transaction.setAmount(transactionDTO.value());
         transaction.setCreatedAt(LocalDateTime.now());
-        
+
         // salvar alteracao
         userService.saveUser(payer);
         userService.saveUser(payee);
         transactionRepository.save(transaction);
+
+        this.notificationService.sendNotification(payee, "Transaction completed");
+        this.notificationService.sendNotification(payer, "Transaction completed");
+
     }
 
     public void validateTransaction(User payee, BigDecimal amount){
