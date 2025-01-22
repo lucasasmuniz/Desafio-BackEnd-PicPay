@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import br.com.desafiopicpay.desafiopicpay.dto.NotificationDTO;
+import br.com.desafiopicpay.desafiopicpay.exception.NotificationErrorExcepcion;
 import br.com.desafiopicpay.desafiopicpay.model.User;
 
 @Service
@@ -22,7 +23,7 @@ public class NotificationService {
         NotificationDTO notificationRequest = new NotificationDTO(user.getEmail(), message);
         ResponseEntity<String> response = this.restTemplate.postForEntity("https://util.devi.tools/api/v1/notify", notificationRequest, String.class);
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new RuntimeException("Error sending the notification");         
+            throw new NotificationErrorExcepcion("Error sending the notification");         
         }
     }
 }

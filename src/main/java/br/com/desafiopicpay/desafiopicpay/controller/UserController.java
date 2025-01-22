@@ -15,7 +15,7 @@ import br.com.desafiopicpay.desafiopicpay.service.UserService;
 import br.com.desafiopicpay.desafiopicpay.model.User;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/user")
 public class UserController {
     
     @Autowired

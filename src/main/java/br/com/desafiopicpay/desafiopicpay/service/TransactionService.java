@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.com.desafiopicpay.desafiopicpay.dto.TransactionDTO;
+import br.com.desafiopicpay.desafiopicpay.exception.ValidadeTransactionException;
 import br.com.desafiopicpay.desafiopicpay.model.Transaction;
 import br.com.desafiopicpay.desafiopicpay.model.User;
 import br.com.desafiopicpay.desafiopicpay.model.UserType;
@@ -31,6 +32,10 @@ public class TransactionService {
 
     @Transactional
     public Transaction createTransaction(TransactionDTO transactionDTO){
+
+        if (transactionDTO.idPayee() == transactionDTO.idPayer()) {
+            throw new ValidadeTransactionException("It is not possible to transfer to yourself");
+        }
         // buscar usuarios
         User payee = this.userService.findUserById(transactionDTO.idPayee());
         User payer = this.userService.findUserById(transactionDTO.idPayer());
@@ -39,7 +44,7 @@ public class TransactionService {
         validateTransaction(payee, transactionDTO.value());
         boolean authorizerResponse = this.authorizerService.authorizeTransaction(payee, transactionDTO.value());
         if (!authorizerResponse){
-            throw new RuntimeException("Transaction Unauthorized");
+            throw new ValidadeTransactionException("Transaction Unauthorized");
         }
         
         // Alterar valores de saldo dos usuarios envolvidos
@@ -67,11 +72,11 @@ public class TransactionService {
 
     public void validateTransaction(User payee, BigDecimal amount){
         if (payee.getUserType() == UserType.RETAILER) {
-            throw new RuntimeException("Retailers cannot make transfers");
+            throw new ValidadeTransactionException("Retailers cannot make transfers");
         };
 
-        if (payee.getBalance().compareTo(amount) == 0){
-            throw new RuntimeException("User does not have sufficient balance to complete the transaction");
+        if (payee.getBalance().compareTo(amount) < 0){
+            throw new ValidadeTransactionException("User does not have sufficient balance to complete the transaction");
         }
     }
 
