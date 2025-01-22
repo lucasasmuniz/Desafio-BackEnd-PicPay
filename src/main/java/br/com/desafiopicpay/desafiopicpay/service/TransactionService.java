@@ -32,16 +32,19 @@ public class TransactionService {
 
     @Transactional
     public Transaction createTransaction(TransactionDTO transactionDTO){
-
-        if (transactionDTO.idPayee() == transactionDTO.idPayer()) {
-            throw new ValidadeTransactionException("It is not possible to transfer to yourself");
-        }
         // buscar usuarios
         User payee = this.userService.findUserById(transactionDTO.idPayee());
         User payer = this.userService.findUserById(transactionDTO.idPayer());
         
+        // Criar transacao
+        Transaction transaction = new Transaction();
+        transaction.setPayee(payee);
+        transaction.setPayer(payer);
+        transaction.setAmount(transactionDTO.value());
+        transaction.setCreatedAt(LocalDateTime.now());
+
         // valida transacao
-        validateTransaction(payee, transactionDTO.value());
+        validateTransaction(transaction);
         boolean authorizerResponse = this.authorizerService.authorizeTransaction(payee, transactionDTO.value());
         if (!authorizerResponse){
             throw new ValidadeTransactionException("Transaction Unauthorized");
@@ -51,13 +54,6 @@ public class TransactionService {
         payee.setBalance(payee.getBalance().subtract(transactionDTO.value()));
         payer.setBalance(payer.getBalance().add(transactionDTO.value()));
         
-        // Criar transacao
-        Transaction transaction = new Transaction();
-        transaction.setPayee(payee);
-        transaction.setPayer(payer);
-        transaction.setAmount(transactionDTO.value());
-        transaction.setCreatedAt(LocalDateTime.now());
-
         // salvar alteracao
         userService.saveUser(payer);
         userService.saveUser(payee);
@@ -70,12 +66,16 @@ public class TransactionService {
 
     }
 
-    public void validateTransaction(User payee, BigDecimal amount){
-        if (payee.getUserType() == UserType.RETAILER) {
+    public void validateTransaction(Transaction transaction){
+        if (transaction.getPayee().getId() == transaction.getPayer().getId()) {
+            throw new ValidadeTransactionException("It is not possible to transfer to yourself");
+        }
+
+        if (transaction.getPayee().getUserType() == UserType.RETAILER) {
             throw new ValidadeTransactionException("Retailers cannot make transfers");
         };
 
-        if (payee.getBalance().compareTo(amount) < 0){
+        if (transaction.getPayee().getBalance().compareTo(transaction.getAmount()) < 0){
             throw new ValidadeTransactionException("User does not have sufficient balance to complete the transaction");
         }
     }
